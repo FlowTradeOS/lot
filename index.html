@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Position Size Calculator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #F5F5F7;
+    --surface: #FFFFFF;
+    --surface2: #F5F5F7;
+    --border: rgba(0,0,0,0.08);
+    --text: #1D1D1F;
+    --muted: #86868B;
+    --blue: #0071E3;
+    --green: #34C759;
+    --red: #FF3B30;
+    --orange: #FF9500;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 24px 16px;
+  }
+  .wrap { width: 100%; max-width: 540px; }
+  .header { margin-bottom: 20px; }
+  .header h1 { font-size: 24px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; }
+  .header p { font-size: 13px; color: var(--muted); margin-top: 3px; font-weight: 400; }
+  .card { background: var(--surface); border-radius: 16px; padding: 20px; margin-bottom: 12px; }
+  .card-title { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 14px; }
+  .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field.full { grid-column: 1 / -1; }
+  .field label { font-size: 12px; font-weight: 500; color: var(--muted); }
+  .input-wrap { position: relative; }
+  .input-suffix { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--muted); pointer-events: none; }
+  input[type="number"], select {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text); font-family: 'Inter', sans-serif;
+    font-size: 15px; font-weight: 500; padding: 10px 36px 10px 13px;
+    outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    -moz-appearance: textfield; appearance: none;
+  }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+  input:focus, select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,113,227,0.15); }
+  select {
+    padding-right: 36px; cursor: pointer;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2386868B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat; background-position: right 12px center; background-size: 14px;
+  }
+  optgroup { color: var(--blue); font-style: normal; font-size: 12px; }
+  option { color: var(--text); }
+  .calc-btn { width: 100%; background: var(--blue); border: none; border-radius: 12px; color: #fff; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; padding: 14px; cursor: pointer; transition: all 0.2s; letter-spacing: -0.2px; }
+  .calc-btn:hover { background: #0077ED; }
+  .calc-btn:active { transform: scale(0.99); }
+  .results { display: none; margin-top: 12px; }
+  .results.visible { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .result-card { background: var(--surface); border-radius: 14px; padding: 14px 16px; }
+  .result-card.full { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; }
+  .result-label { font-size: 11px; color: var(--muted); font-weight: 500; margin-bottom: 4px; }
+  .result-value { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; color: var(--text); }
+  .result-value.blue { color: var(--blue); }
+  .result-value.green { color: var(--green); }
+  .result-value.red { color: var(--red); }
+  .result-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .progress-card { background: var(--surface); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; }
+  .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .progress-label { font-size: 13px; font-weight: 500; }
+  .progress-pct { font-size: 13px; font-weight: 600; }
+  .progress-bg { height: 6px; background: rgba(0,0,0,0.08); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width 0.5s cubic-bezier(0.25,0.46,0.45,0.94), background 0.3s; }
+  .alert-card { border-radius: 14px; padding: 14px 16px; display: none; }
+  .alert-card.visible { display: flex; align-items: flex-start; gap: 10px; animation: fadeIn 0.3s ease; }
+  .alert-icon { font-size: 18px; flex-shrink: 0; }
+  .alert-text { font-size: 13px; font-weight: 500; line-height: 1.4; }
+  .alert-card.warning { background: rgba(255,149,0,0.1); }
+  .alert-card.warning .alert-text { color: #A05C00; }
+  .alert-card.safe { background: rgba(52,199,89,0.08); }
+  .alert-card.safe .alert-text { color: #1A7F37; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <h1>Position Size</h1>
+    <p>Lot size & risk calculator</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Instrument</div>
+    <div class="fields">
+      <div class="field full">
+        <label>Select Pair</label>
+        <select id="instrument">
+          <option value="" disabled selected>Select instrument...</option>
+          <optgroup label="Forex Majors">
+            <option value="EURUSD|10">EUR/USD</option>
+            <option value="GBPUSD|10">GBP/USD</option>
+            <option value="USDJPY|6.70">USD/JPY</option>
+            <option value="USDCHF|7.50">USD/CHF</option>
+            <option value="AUDUSD|10">AUD/USD</option>
+            <option value="NZDUSD|10">NZD/USD</option>
+            <option value="USDCAD|7.50">USD/CAD</option>
+          </optgroup>
+          <optgroup label="Forex Minors">
+            <option value="EURGBP|10">EUR/GBP</option>
+            <option value="EURJPY|6.70">EUR/JPY</option>
+            <option value="EURAUD|10">EUR/AUD</option>
+            <option value="EURCAD|7.50">EUR/CAD</option>
+            <option value="GBPJPY|6.70">GBP/JPY</option>
+            <option value="GBPAUD|10">GBP/AUD</option>
+            <option value="AUDJPY|6.70">AUD/JPY</option>
+            <option value="CADJPY|6.70">CAD/JPY</option>
+          </optgroup>
+          <optgroup label="Metals & Commodities">
+            <option value="XAUUSD|10">XAU/USD (Gold)</option>
+            <option value="XAGUSD|5">XAG/USD (Silver)</option>
+            <option value="WTI|10">WTI Oil</option>
+          </optgroup>
+          <optgroup label="Indices">
+            <option value="GER40|1">GER40</option>
+            <option value="US30|1">US30</option>
+            <option value="NAS100|1">NAS100</option>
+            <option value="US500|1">US500</option>
+          </optgroup>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Account & Risk</div>
+    <div class="fields">
+      <div class="field">
+        <label>Account Balance</label>
+        <div class="input-wrap">
+          <input type="number" id="balance" value="10000" min="1">
+          <span class="input-suffix">$</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Risk Per Trade</label>
+        <div class="input-wrap">
+          <input type="number" id="risk" value="1" min="0.1" max="10" step="0.1">
+          <span class="input-suffix">%</span>
+        </div>
+      </div>
+      <div class="field full">
+        <label>Stop Loss</label>
+        <div class="input-wrap">
+          <input type="number" id="stoploss" value="20" min="0.1" step="0.1">
+          <span class="input-suffix">pips</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="calc-btn" onclick="calculate()">Calculate</button>
+
+  <div class="results" id="results">
+    <div class="result-grid">
+      <div class="result-card">
+        <div class="result-label">Standard Lots</div>
+        <div class="result-value blue" id="standard-lot">—</div>
+        <div class="result-sub">lots</div>
+      </div>
+      <div class="result-card">
+        <div class="result-label">Mini Lots</div>
+        <div class="result-value green" id="mini-lot">—</div>
+        <div class="result-sub">0.1 lots</div>
+      </div>
+      <div class="result-card">
+        <div class="result-label">Risk Amount</div>
+        <div class="result-value red" id="risk-amount">—</div>
+        <div class="result-sub" id="risk-pct-sub">of account</div>
+      </div>
+      <div class="result-card">
+        <div class="result-label">R:R (1:2)</div>
+        <div class="result-value" id="rr-value">—</div>
+        <div class="result-sub" id="rr-sub">potential profit</div>
+      </div>
+    </div>
+
+    <div class="progress-card">
+      <div class="progress-header">
+        <span class="progress-label">Risk Level</span>
+        <span class="progress-pct" id="risk-level-text">Conservative</span>
+      </div>
+      <div class="progress-bg">
+        <div class="progress-fill" id="risk-bar"></div>
+      </div>
+    </div>
+
+    <div class="alert-card" id="alert">
+      <div class="alert-icon" id="alert-icon"></div>
+      <div class="alert-text" id="alert-text"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function calculate() {
+    const instrVal = document.getElementById('instrument').value;
+    const balance = parseFloat(document.getElementById('balance').value);
+    const riskPct = parseFloat(document.getElementById('risk').value);
+    const slPips = parseFloat(document.getElementById('stoploss').value);
+
+    if (!instrVal || !balance || !riskPct || !slPips || slPips <= 0) {
+      alert('Please fill in all required fields!');
+      return;
+    }
+
+    const pipValue = parseFloat(instrVal.split('|')[1]);
+    const riskUSD = (balance * riskPct) / 100;
+    const lotSize = riskUSD / (slPips * pipValue);
+    const miniLots = lotSize * 10;
+    const potentialProfit = riskUSD * 2;
+
+    document.getElementById('standard-lot').textContent = lotSize.toFixed(2);
+    document.getElementById('mini-lot').textContent = miniLots.toFixed(2);
+    document.getElementById('risk-amount').textContent = '$' + riskUSD.toFixed(2);
+    document.getElementById('risk-pct-sub').textContent = riskPct + '% of account';
+    document.getElementById('rr-value').textContent = '$' + potentialProfit.toFixed(2);
+    document.getElementById('rr-sub').textContent = 'at 1:2 R:R';
+
+    const bar = document.getElementById('risk-bar');
+    const levelText = document.getElementById('risk-level-text');
+    bar.style.width = Math.min((riskPct / 5) * 100, 100) + '%';
+
+    if (riskPct <= 1) {
+      bar.style.background = '#34C759';
+      levelText.textContent = 'Conservative ✓';
+      levelText.style.color = '#34C759';
+    } else if (riskPct <= 2) {
+      bar.style.background = '#FF9500';
+      levelText.textContent = 'Moderate';
+      levelText.style.color = '#FF9500';
+    } else {
+      bar.style.background = '#FF3B30';
+      levelText.textContent = 'High Risk';
+      levelText.style.color = '#FF3B30';
+    }
+
+    const alertEl = document.getElementById('alert');
+    if (riskPct > 2) {
+      alertEl.className = 'alert-card visible warning';
+      document.getElementById('alert-icon').textContent = '⚠️';
+      document.getElementById('alert-text').textContent = 'Risk above 2% is considered high. Professional traders recommend keeping risk at 1-2% per trade.';
+    } else {
+      alertEl.className = 'alert-card visible safe';
+      document.getElementById('alert-icon').textContent = '✅';
+      document.getElementById('alert-text').textContent = 'Risk is within safe parameters. Stay disciplined and follow your trading plan.';
+    }
+
+    document.getElementById('results').classList.add('visible');
+  }
+</script>
+</body>
+</html>
