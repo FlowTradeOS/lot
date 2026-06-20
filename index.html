@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Risk Management Calculator</title>
+<title>Position Size Calculator</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -18,7 +18,6 @@
     --green: #34C759;
     --red: #FF3B30;
     --orange: #FF9500;
-    --yellow: #FFCC00;
   }
   body {
     background: var(--bg);
@@ -34,18 +33,18 @@
   .header { margin-bottom: 20px; }
   .header h1 { font-size: 24px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; }
   .header p { font-size: 13px; color: var(--muted); margin-top: 3px; font-weight: 400; }
-  .segmented { background: rgba(0,0,0,0.06); border-radius: 10px; padding: 3px; display: grid; grid-template-columns: 1fr 1fr; gap: 2px; margin-bottom: 20px; }
-  .seg-btn { background: transparent; border: none; border-radius: 8px; color: var(--muted); font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 8px; cursor: pointer; transition: all 0.2s; }
-  .seg-btn.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.12), 0 0 0 0.5px rgba(0,0,0,0.08); font-weight: 600; }
+
   .card { background: var(--surface); border-radius: 16px; padding: 20px; margin-bottom: 12px; }
   .card-title { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 14px; }
+
   .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .field { display: flex; flex-direction: column; gap: 6px; }
   .field.full { grid-column: 1 / -1; }
   .field label { font-size: 12px; font-weight: 500; color: var(--muted); }
   .input-wrap { position: relative; }
-  .input-suffix { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--muted); pointer-events: none; font-weight: 400; }
-  input[type="number"] {
+  .input-suffix { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--muted); pointer-events: none; }
+
+  input[type="number"], select {
     width: 100%; background: var(--surface2); border: 1px solid var(--border);
     border-radius: 10px; color: var(--text); font-family: 'Inter', sans-serif;
     font-size: 15px; font-weight: 500; padding: 10px 36px 10px 13px;
@@ -54,32 +53,41 @@
   }
   input[type="number"]::-webkit-outer-spin-button,
   input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
-  input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,113,227,0.15); }
+  input:focus, select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,113,227,0.15); }
+
+  select {
+    padding-right: 36px; cursor: pointer;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2386868B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat; background-position: right 12px center; background-size: 14px;
+  }
+  optgroup { color: var(--blue); font-style: normal; font-size: 12px; }
+  option { color: var(--text); }
+
   .calc-btn { width: 100%; background: var(--blue); border: none; border-radius: 12px; color: #fff; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; padding: 14px; cursor: pointer; transition: all 0.2s; letter-spacing: -0.2px; margin-bottom: 12px; }
   .calc-btn:hover { background: #0077ED; }
   .calc-btn:active { background: #006CD6; transform: scale(0.99); }
+
   .results { display: none; }
   .results.visible { display: block; animation: fadeIn 0.3s ease; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
   .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
   .result-card { background: var(--surface); border-radius: 14px; padding: 14px 16px; }
+  .result-card.full { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; }
   .result-label { font-size: 11px; color: var(--muted); font-weight: 500; margin-bottom: 4px; }
   .result-value { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; color: var(--text); }
   .result-value.blue { color: var(--blue); }
   .result-value.green { color: var(--green); }
   .result-value.red { color: var(--red); }
-  .result-value.orange { color: var(--orange); }
   .result-sub { font-size: 11px; color: var(--muted); margin-top: 2px; font-weight: 400; }
+
   .progress-card { background: var(--surface); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; }
   .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
   .progress-label { font-size: 13px; font-weight: 500; }
   .progress-pct { font-size: 13px; font-weight: 600; }
   .progress-bg { height: 6px; background: rgba(0,0,0,0.08); border-radius: 3px; overflow: hidden; }
   .progress-fill { height: 100%; border-radius: 3px; transition: width 0.5s cubic-bezier(0.25,0.46,0.45,0.94), background 0.3s; }
-  .multi-progress { background: var(--surface); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; display: none; }
-  .multi-progress.visible { display: block; }
-  .multi-row { margin-bottom: 10px; }
-  .multi-row:last-child { margin-bottom: 0; }
+
   .alert-card { border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; display: none; }
   .alert-card.visible { display: flex; align-items: flex-start; gap: 10px; }
   .alert-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
@@ -90,27 +98,62 @@
   .alert-card.warning .alert-text { color: #A05C00; }
   .alert-card.danger { background: rgba(255,59,48,0.08); }
   .alert-card.danger .alert-text { color: #C0392B; }
-  .pf-section { display: none; }
-  .pf-section.visible { display: block; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="header">
-    <h1>Risk Management</h1>
-    <p>Daily loss limit & trade calculator</p>
+    <h1>Position Size</h1>
+    <p>Lot size & risk calculator</p>
   </div>
 
-  <div class="segmented">
-    <button class="seg-btn active" onclick="setMode('normal', this)">Normal Trader</button>
-    <button class="seg-btn" onclick="setMode('propfirm', this)">Prop Firm</button>
+  <div class="card">
+    <div class="card-title">Instrument</div>
+    <div class="fields">
+      <div class="field full">
+        <label>Select Pair</label>
+        <select id="instrument">
+          <option value="" disabled selected>Select instrument...</option>
+          <optgroup label="Forex Majors">
+            <option value="EURUSD|10">EUR/USD</option>
+            <option value="GBPUSD|10">GBP/USD</option>
+            <option value="USDJPY|6.70">USD/JPY</option>
+            <option value="USDCHF|7.50">USD/CHF</option>
+            <option value="AUDUSD|10">AUD/USD</option>
+            <option value="NZDUSD|10">NZD/USD</option>
+            <option value="USDCAD|7.50">USD/CAD</option>
+          </optgroup>
+          <optgroup label="Forex Minors">
+            <option value="EURGBP|10">EUR/GBP</option>
+            <option value="EURJPY|6.70">EUR/JPY</option>
+            <option value="EURAUD|10">EUR/AUD</option>
+            <option value="EURCAD|7.50">EUR/CAD</option>
+            <option value="GBPJPY|6.70">GBP/JPY</option>
+            <option value="GBPAUD|10">GBP/AUD</option>
+            <option value="AUDJPY|6.70">AUD/JPY</option>
+            <option value="CADJPY|6.70">CAD/JPY</option>
+          </optgroup>
+          <optgroup label="Metals & Commodities">
+            <option value="XAUUSD|10">XAU/USD (Gold)</option>
+            <option value="XAGUSD|5">XAG/USD (Silver)</option>
+            <option value="WTI|10">WTI Oil</option>
+          </optgroup>
+          <optgroup label="Indices">
+            <option value="GER40|1">GER40</option>
+            <option value="US30|1">US30</option>
+            <option value="NAS100|1">NAS100</option>
+            <option value="US500|1">US500</option>
+          </optgroup>
+        </select>
+      </div>
+    </div>
   </div>
 
-  <div class="card" id="normal-card">
-    <div class="card-title">Account</div>
+  <div class="card">
+    <div class="card-title">Account & Risk</div>
     <div class="fields">
       <div class="field">
-        <label>Balance</label>
+        <label>Account Balance</label>
         <div class="input-wrap">
           <input type="number" id="balance" value="10000" min="1">
           <span class="input-suffix">$</span>
@@ -119,93 +162,18 @@
       <div class="field">
         <label>Risk Per Trade</label>
         <div class="input-wrap">
-          <input type="number" id="risk-per-trade" value="1" min="0.1" max="10" step="0.1">
+          <input type="number" id="risk" value="1" min="0.1" max="10" step="0.1">
           <span class="input-suffix">%</span>
         </div>
       </div>
       <div class="field">
-        <label>Daily Loss Limit</label>
+        <label>Stop Loss</label>
         <div class="input-wrap">
-          <input type="number" id="daily-loss-limit" value="3" min="0.1" step="0.1">
-          <span class="input-suffix">%</span>
+          <input type="number" id="stoploss" value="20" min="0.1" step="0.1">
+          <span class="input-suffix">pips</span>
         </div>
       </div>
       <div class="field">
-        <label>Loss Today</label>
-        <div class="input-wrap">
-          <input type="number" id="loss-today" value="0" min="0">
-          <span class="input-suffix">$</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card pf-section" id="pf-card">
-    <div class="card-title">Prop Firm Account</div>
-    <div class="fields">
-      <div class="field">
-        <label>Balance</label>
-        <div class="input-wrap">
-          <input type="number" id="pf-balance" value="100000" min="1">
-          <span class="input-suffix">$</span>
-        </div>
-      </div>
-      <div class="field">
-        <label>Risk Per Trade</label>
-        <div class="input-wrap">
-          <input type="number" id="pf-risk-per-trade" value="0.5" min="0.1" max="10" step="0.1">
-          <span class="input-suffix">%</span>
-        </div>
-      </div>
-      <div class="field">
-        <label>Max Daily Loss</label>
-        <div class="input-wrap">
-          <input type="number" id="pf-max-daily" value="5" min="0.1" step="0.1">
-          <span class="input-suffix">%</span>
-        </div>
-      </div>
-      <div class="field">
-        <label>Loss Today</label>
-        <div class="input-wrap">
-          <input type="number" id="pf-loss-today" value="0" min="0">
-          <span class="input-suffix">$</span>
-        </div>
-      </div>
-      <div class="field">
-        <label>Max Drawdown</label>
-        <div class="input-wrap">
-          <input type="number" id="pf-max-drawdown" value="10" min="0.1" step="0.1">
-          <span class="input-suffix">%</span>
-        </div>
-      </div>
-      <div class="field">
-        <label>Current Drawdown</label>
-        <div class="input-wrap">
-          <input type="number" id="pf-current-drawdown" value="0" min="0" step="0.1">
-          <span class="input-suffix">%</span>
-        </div>
-      </div>
-      <div class="field">
-        <label>Profit Target</label>
-        <div class="input-wrap">
-          <input type="number" id="pf-target" value="10" min="0.1" step="0.1">
-          <span class="input-suffix">%</span>
-        </div>
-      </div>
-      <div class="field">
-        <label>Current Profit</label>
-        <div class="input-wrap">
-          <input type="number" id="pf-current-profit" value="0" min="0" step="0.1">
-          <span class="input-suffix">%</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">Risk / Reward</div>
-    <div class="fields">
-      <div class="field full">
         <label>RR Ratio (1 : X)</label>
         <div class="input-wrap">
           <input type="number" id="rr-ratio" value="2" min="0.1" step="0.1">
@@ -220,62 +188,34 @@
   <div class="results" id="results">
     <div class="result-grid">
       <div class="result-card">
-        <div class="result-label">Max Trades Today</div>
-        <div class="result-value blue" id="max-trades">—</div>
-        <div class="result-sub" id="risk-sub">risk per trade</div>
+        <div class="result-label">Standard Lots</div>
+        <div class="result-value blue" id="standard-lot">—</div>
+        <div class="result-sub">lots</div>
       </div>
       <div class="result-card">
-        <div class="result-label">Trades Remaining</div>
-        <div class="result-value green" id="trades-remaining">—</div>
-        <div class="result-sub" id="rr-sub">potential profit</div>
+        <div class="result-label">Mini Lots</div>
+        <div class="result-value green" id="mini-lot">—</div>
+        <div class="result-sub">0.1 lots</div>
       </div>
       <div class="result-card">
-        <div class="result-label">Daily Limit</div>
-        <div class="result-value red" id="daily-limit-usd">—</div>
-        <div class="result-sub" id="daily-limit-pct">of account</div>
+        <div class="result-label">Risk Amount</div>
+        <div class="result-value red" id="risk-amount">—</div>
+        <div class="result-sub" id="risk-pct-sub">of account</div>
       </div>
       <div class="result-card">
-        <div class="result-label">Remaining Budget</div>
-        <div class="result-value orange" id="remaining-budget">—</div>
-        <div class="result-sub">can still lose</div>
+        <div class="result-label">Potential Profit</div>
+        <div class="result-value green" id="rr-value">—</div>
+        <div class="result-sub" id="rr-sub">at 1:2 RR</div>
       </div>
     </div>
 
     <div class="progress-card">
       <div class="progress-header">
-        <span class="progress-label">Daily Loss Used</span>
-        <span class="progress-pct" id="loss-pct-text">0%</span>
+        <span class="progress-label">Risk Level</span>
+        <span class="progress-pct" id="risk-level-text">—</span>
       </div>
       <div class="progress-bg">
-        <div class="progress-fill" id="loss-bar"></div>
-      </div>
-    </div>
-
-    <!-- Prop Firm extra: drawdown cards + combined progress -->
-    <div class="pf-section" id="pf-results">
-      <div class="result-grid">
-        <div class="result-card">
-          <div class="result-label">Drawdown Used</div>
-          <div class="result-value red" id="pf-drawdown-val">—</div>
-          <div class="result-sub" id="pf-drawdown-rem">remaining</div>
-        </div>
-        <div class="result-card">
-          <div class="result-label">Profit Progress</div>
-          <div class="result-value green" id="pf-profit-val">—</div>
-          <div class="result-sub" id="pf-profit-rem">to target</div>
-        </div>
-      </div>
-      <div class="progress-card">
-        <div class="progress-header">
-          <span class="progress-label">Drawdown Risk</span>
-          <span class="progress-pct" id="pf-dd-pct">0%</span>
-        </div>
-        <div class="progress-bg" style="margin-bottom:12px;"><div class="progress-fill" id="pf-dd-bar"></div></div>
-        <div class="progress-header">
-          <span class="progress-label">Profit Target</span>
-          <span class="progress-pct" id="pf-profit-pct">0%</span>
-        </div>
-        <div class="progress-bg"><div class="progress-fill" id="pf-profit-bar" style="background: var(--green);"></div></div>
+        <div class="progress-fill" id="risk-bar"></div>
       </div>
     </div>
 
@@ -287,111 +227,63 @@
 </div>
 
 <script>
-  let currentMode = 'normal';
-
-  function setMode(mode, btn) {
-    currentMode = mode;
-    document.querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    const isPF = mode === 'propfirm';
-    document.getElementById('normal-card').style.display = isPF ? 'none' : 'block';
-    document.getElementById('pf-card').classList.toggle('visible', isPF);
-    document.getElementById('pf-results').classList.toggle('visible', isPF);
-    document.getElementById('results').classList.remove('visible');
-  }
-
-  function setAlert(type, icon, text) {
-    const el = document.getElementById('alert');
-    el.className = 'alert-card visible ' + type;
-    document.getElementById('alert-icon').textContent = icon;
-    document.getElementById('alert-text').textContent = text;
-  }
-
-  function setBar(id, pct) {
-    const bar = document.getElementById(id);
-    bar.style.width = Math.min(Math.max(pct, 0), 100) + '%';
-    bar.style.background = pct < 50 ? '#34C759' : pct < 80 ? '#FF9500' : '#FF3B30';
-  }
-
   function calculate() {
-    let balance, riskPct, dailyLossPct, lossToday;
-
-    if (currentMode === 'normal') {
-      balance = parseFloat(document.getElementById('balance').value) || 0;
-      riskPct = parseFloat(document.getElementById('risk-per-trade').value) || 0;
-      dailyLossPct = parseFloat(document.getElementById('daily-loss-limit').value) || 0;
-      lossToday = parseFloat(document.getElementById('loss-today').value) || 0;
-    } else {
-      balance = parseFloat(document.getElementById('pf-balance').value) || 0;
-      riskPct = parseFloat(document.getElementById('pf-risk-per-trade').value) || 0;
-      dailyLossPct = parseFloat(document.getElementById('pf-max-daily').value) || 0;
-      lossToday = parseFloat(document.getElementById('pf-loss-today').value) || 0;
-    }
-
+    const instrVal = document.getElementById('instrument').value;
+    const balance = parseFloat(document.getElementById('balance').value) || 0;
+    const riskPct = parseFloat(document.getElementById('risk').value) || 0;
+    const slPips = parseFloat(document.getElementById('stoploss').value) || 0;
     const rrRatio = parseFloat(document.getElementById('rr-ratio').value) || 1;
+
+    if (!instrVal) { alert('Please select an instrument!'); return; }
+    if (!balance || !riskPct || !slPips) { alert('Please fill in all fields!'); return; }
+
+    const pipValue = parseFloat(instrVal.split('|')[1]);
     const riskUSD = balance * riskPct / 100;
-    const dailyLimitUSD = balance * dailyLossPct / 100;
-    const remainingBudget = Math.max(0, dailyLimitUSD - lossToday);
-    const maxTrades = riskUSD > 0 && dailyLimitUSD > 0 ? Math.floor(dailyLimitUSD / riskUSD) : 0;
-    const tradesRemaining = riskUSD > 0 ? Math.max(0, Math.floor(remainingBudget / riskUSD)) : 0;
-    const lossPctUsed = dailyLimitUSD > 0 ? (lossToday / dailyLimitUSD) * 100 : 0;
-    const profitUSD = riskUSD * rrRatio;
+    const lotSize = riskUSD / (slPips * pipValue);
+    const miniLots = lotSize * 10;
+    const potentialProfit = riskUSD * rrRatio;
 
-    document.getElementById('max-trades').textContent = maxTrades;
-    document.getElementById('risk-sub').textContent = '$' + riskUSD.toFixed(0) + ' · ' + riskPct + '% risk';
-    document.getElementById('trades-remaining').textContent = tradesRemaining;
-    document.getElementById('rr-sub').textContent = '$' + profitUSD.toFixed(0) + ' profit at 1:' + rrRatio;
-    document.getElementById('daily-limit-usd').textContent = '$' + dailyLimitUSD.toFixed(0);
-    document.getElementById('daily-limit-pct').textContent = dailyLossPct + '% of account';
-    document.getElementById('remaining-budget').textContent = '$' + remainingBudget.toFixed(0);
-    document.getElementById('loss-pct-text').textContent = Math.min(lossPctUsed, 100).toFixed(0) + '%';
-    setBar('loss-bar', lossPctUsed);
+    document.getElementById('standard-lot').textContent = lotSize.toFixed(2);
+    document.getElementById('mini-lot').textContent = miniLots.toFixed(2);
+    document.getElementById('risk-amount').textContent = '$' + riskUSD.toFixed(2);
+    document.getElementById('risk-pct-sub').textContent = riskPct + '% of $' + balance.toLocaleString();
+    document.getElementById('rr-value').textContent = '$' + potentialProfit.toFixed(2);
+    document.getElementById('rr-sub').textContent = 'at 1:' + rrRatio + ' RR';
 
-    let alertType = 'safe', alertIcon = '✅', alertMsg = 'Within safe risk parameters. Stay disciplined and follow your plan.';
+    const barPct = Math.min((riskPct / 5) * 100, 100);
+    const bar = document.getElementById('risk-bar');
+    const levelText = document.getElementById('risk-level-text');
+    bar.style.width = barPct + '%';
 
-    if (tradesRemaining === 0 || lossPctUsed >= 100) {
-      alertType = 'danger'; alertIcon = '🛑';
-      alertMsg = 'Daily loss limit reached. Stop trading and protect your account. Come back tomorrow.';
-    } else if (lossPctUsed >= 80 || tradesRemaining === 1) {
-      alertType = 'warning'; alertIcon = '⚠️';
-      alertMsg = tradesRemaining === 1
-        ? 'Only 1 trade remaining today. Be very selective or stop here.'
-        : 'You are close to your daily limit. Consider stopping for today.';
+    if (riskPct <= 1) {
+      bar.style.background = '#34C759';
+      levelText.textContent = 'Conservative';
+      levelText.style.color = '#34C759';
+    } else if (riskPct <= 2) {
+      bar.style.background = '#FF9500';
+      levelText.textContent = 'Moderate';
+      levelText.style.color = '#FF9500';
+    } else {
+      bar.style.background = '#FF3B30';
+      levelText.textContent = 'High Risk';
+      levelText.style.color = '#FF3B30';
     }
 
-    if (currentMode === 'propfirm') {
-      const pfMaxDrawdown = parseFloat(document.getElementById('pf-max-drawdown').value) || 0;
-      const pfCurrentDrawdown = parseFloat(document.getElementById('pf-current-drawdown').value) || 0;
-      const pfTarget = parseFloat(document.getElementById('pf-target').value) || 0;
-      const pfCurrentProfit = parseFloat(document.getElementById('pf-current-profit').value) || 0;
-
-      const drawdownRem = Math.max(0, pfMaxDrawdown - pfCurrentDrawdown);
-      const profitRem = Math.max(0, pfTarget - pfCurrentProfit);
-      const ddPct = pfMaxDrawdown > 0 ? (pfCurrentDrawdown / pfMaxDrawdown) * 100 : 0;
-      const profitPct = pfTarget > 0 ? (pfCurrentProfit / pfTarget) * 100 : 0;
-
-      document.getElementById('pf-drawdown-val').textContent = pfCurrentDrawdown.toFixed(1) + '%';
-      document.getElementById('pf-drawdown-rem').textContent = drawdownRem.toFixed(1) + '% remaining';
-      document.getElementById('pf-profit-val').textContent = pfCurrentProfit.toFixed(1) + '%';
-      document.getElementById('pf-profit-rem').textContent = profitRem.toFixed(1) + '% to target';
-      document.getElementById('pf-dd-pct').textContent = ddPct.toFixed(0) + '%';
-      document.getElementById('pf-profit-pct').textContent = profitPct.toFixed(0) + '%';
-      setBar('pf-dd-bar', ddPct);
-      document.getElementById('pf-profit-bar').style.width = Math.min(profitPct, 100) + '%';
-
-      if (pfCurrentProfit >= pfTarget) {
-        alertType = 'safe'; alertIcon = '🎉';
-        alertMsg = 'Profit target reached! Consider requesting a payout or stop trading to lock in your gains.';
-      } else if (ddPct >= 90 && alertType !== 'danger') {
-        alertType = 'danger'; alertIcon = '🛑';
-        alertMsg = 'Drawdown critical — one more losing trade could fail your challenge. Stop immediately.';
-      } else if (ddPct >= 70 && alertType === 'safe') {
-        alertType = 'warning'; alertIcon = '⚠️';
-        alertMsg = 'Drawdown approaching limit. Reduce risk size and be very selective with entries.';
-      }
+    const alertEl = document.getElementById('alert');
+    if (riskPct > 3) {
+      alertEl.className = 'alert-card visible danger';
+      document.getElementById('alert-icon').textContent = '🛑';
+      document.getElementById('alert-text').textContent = 'Risk above 3% is very high. One losing streak can wipe significant capital. Reduce your position size immediately.';
+    } else if (riskPct > 1) {
+      alertEl.className = 'alert-card visible warning';
+      document.getElementById('alert-icon').textContent = '⚠️';
+      document.getElementById('alert-text').textContent = 'Risk above 1% increases pressure. Professional traders keep risk at 0.5–1% per trade for long-term consistency.';
+    } else {
+      alertEl.className = 'alert-card visible safe';
+      document.getElementById('alert-icon').textContent = '✅';
+      document.getElementById('alert-text').textContent = 'Risk is within safe parameters. Stay disciplined and follow your trading plan.';
     }
 
-    setAlert(alertType, alertIcon, alertMsg);
     document.getElementById('results').classList.add('visible');
   }
 </script>
