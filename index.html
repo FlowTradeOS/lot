@@ -33,14 +33,17 @@
   .header { margin-bottom: 20px; }
   .header h1 { font-size: 24px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; }
   .header p { font-size: 13px; color: var(--muted); margin-top: 3px; font-weight: 400; }
+
   .card { background: var(--surface); border-radius: 16px; padding: 20px; margin-bottom: 12px; }
   .card-title { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 14px; }
+
   .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .field { display: flex; flex-direction: column; gap: 6px; }
   .field.full { grid-column: 1 / -1; }
   .field label { font-size: 12px; font-weight: 500; color: var(--muted); }
   .input-wrap { position: relative; }
   .input-suffix { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--muted); pointer-events: none; }
+
   input[type="number"], select {
     width: 100%; background: var(--surface2); border: 1px solid var(--border);
     border-radius: 10px; color: var(--text); font-family: 'Inter', sans-serif;
@@ -51,6 +54,7 @@
   input[type="number"]::-webkit-outer-spin-button,
   input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
   input:focus, select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,113,227,0.15); }
+
   select {
     padding-right: 36px; cursor: pointer;
     background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2386868B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
@@ -58,12 +62,15 @@
   }
   optgroup { color: var(--blue); font-style: normal; font-size: 12px; }
   option { color: var(--text); }
-  .calc-btn { width: 100%; background: var(--blue); border: none; border-radius: 12px; color: #fff; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; padding: 14px; cursor: pointer; transition: all 0.2s; letter-spacing: -0.2px; }
+
+  .calc-btn { width: 100%; background: var(--blue); border: none; border-radius: 12px; color: #fff; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; padding: 14px; cursor: pointer; transition: all 0.2s; letter-spacing: -0.2px; margin-bottom: 12px; }
   .calc-btn:hover { background: #0077ED; }
-  .calc-btn:active { transform: scale(0.99); }
-  .results { display: none; margin-top: 12px; }
+  .calc-btn:active { background: #006CD6; transform: scale(0.99); }
+
+  .results { display: none; }
   .results.visible { display: block; animation: fadeIn 0.3s ease; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
   .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
   .result-card { background: var(--surface); border-radius: 14px; padding: 14px 16px; }
   .result-card.full { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; }
@@ -72,21 +79,25 @@
   .result-value.blue { color: var(--blue); }
   .result-value.green { color: var(--green); }
   .result-value.red { color: var(--red); }
-  .result-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .result-sub { font-size: 11px; color: var(--muted); margin-top: 2px; font-weight: 400; }
+
   .progress-card { background: var(--surface); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; }
   .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
   .progress-label { font-size: 13px; font-weight: 500; }
   .progress-pct { font-size: 13px; font-weight: 600; }
   .progress-bg { height: 6px; background: rgba(0,0,0,0.08); border-radius: 3px; overflow: hidden; }
   .progress-fill { height: 100%; border-radius: 3px; transition: width 0.5s cubic-bezier(0.25,0.46,0.45,0.94), background 0.3s; }
-  .alert-card { border-radius: 14px; padding: 14px 16px; display: none; }
-  .alert-card.visible { display: flex; align-items: flex-start; gap: 10px; animation: fadeIn 0.3s ease; }
-  .alert-icon { font-size: 18px; flex-shrink: 0; }
+
+  .alert-card { border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; display: none; }
+  .alert-card.visible { display: flex; align-items: flex-start; gap: 10px; }
+  .alert-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
   .alert-text { font-size: 13px; font-weight: 500; line-height: 1.4; }
-  .alert-card.warning { background: rgba(255,149,0,0.1); }
-  .alert-card.warning .alert-text { color: #A05C00; }
   .alert-card.safe { background: rgba(52,199,89,0.08); }
   .alert-card.safe .alert-text { color: #1A7F37; }
+  .alert-card.warning { background: rgba(255,149,0,0.1); }
+  .alert-card.warning .alert-text { color: #A05C00; }
+  .alert-card.danger { background: rgba(255,59,48,0.08); }
+  .alert-card.danger .alert-text { color: #C0392B; }
 </style>
 </head>
 <body>
@@ -155,11 +166,18 @@
           <span class="input-suffix">%</span>
         </div>
       </div>
-      <div class="field full">
+      <div class="field">
         <label>Stop Loss</label>
         <div class="input-wrap">
           <input type="number" id="stoploss" value="20" min="0.1" step="0.1">
           <span class="input-suffix">pips</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>RR Ratio (1 : X)</label>
+        <div class="input-wrap">
+          <input type="number" id="rr-ratio" value="2" min="0.1" step="0.1">
+          <span class="input-suffix">R</span>
         </div>
       </div>
     </div>
@@ -185,16 +203,16 @@
         <div class="result-sub" id="risk-pct-sub">of account</div>
       </div>
       <div class="result-card">
-        <div class="result-label">R:R (1:2)</div>
-        <div class="result-value" id="rr-value">—</div>
-        <div class="result-sub" id="rr-sub">potential profit</div>
+        <div class="result-label">Potential Profit</div>
+        <div class="result-value green" id="rr-value">—</div>
+        <div class="result-sub" id="rr-sub">at 1:2 RR</div>
       </div>
     </div>
 
     <div class="progress-card">
       <div class="progress-header">
         <span class="progress-label">Risk Level</span>
-        <span class="progress-pct" id="risk-level-text">Conservative</span>
+        <span class="progress-pct" id="risk-level-text">—</span>
       </div>
       <div class="progress-bg">
         <div class="progress-fill" id="risk-bar"></div>
@@ -211,35 +229,35 @@
 <script>
   function calculate() {
     const instrVal = document.getElementById('instrument').value;
-    const balance = parseFloat(document.getElementById('balance').value);
-    const riskPct = parseFloat(document.getElementById('risk').value);
-    const slPips = parseFloat(document.getElementById('stoploss').value);
+    const balance = parseFloat(document.getElementById('balance').value) || 0;
+    const riskPct = parseFloat(document.getElementById('risk').value) || 0;
+    const slPips = parseFloat(document.getElementById('stoploss').value) || 0;
+    const rrRatio = parseFloat(document.getElementById('rr-ratio').value) || 1;
 
-    if (!instrVal || !balance || !riskPct || !slPips || slPips <= 0) {
-      alert('Please fill in all required fields!');
-      return;
-    }
+    if (!instrVal) { alert('Please select an instrument!'); return; }
+    if (!balance || !riskPct || !slPips) { alert('Please fill in all fields!'); return; }
 
     const pipValue = parseFloat(instrVal.split('|')[1]);
-    const riskUSD = (balance * riskPct) / 100;
+    const riskUSD = balance * riskPct / 100;
     const lotSize = riskUSD / (slPips * pipValue);
     const miniLots = lotSize * 10;
-    const potentialProfit = riskUSD * 2;
+    const potentialProfit = riskUSD * rrRatio;
 
     document.getElementById('standard-lot').textContent = lotSize.toFixed(2);
     document.getElementById('mini-lot').textContent = miniLots.toFixed(2);
     document.getElementById('risk-amount').textContent = '$' + riskUSD.toFixed(2);
-    document.getElementById('risk-pct-sub').textContent = riskPct + '% of account';
+    document.getElementById('risk-pct-sub').textContent = riskPct + '% of $' + balance.toLocaleString();
     document.getElementById('rr-value').textContent = '$' + potentialProfit.toFixed(2);
-    document.getElementById('rr-sub').textContent = 'at 1:2 R:R';
+    document.getElementById('rr-sub').textContent = 'at 1:' + rrRatio + ' RR';
 
+    const barPct = Math.min((riskPct / 5) * 100, 100);
     const bar = document.getElementById('risk-bar');
     const levelText = document.getElementById('risk-level-text');
-    bar.style.width = Math.min((riskPct / 5) * 100, 100) + '%';
+    bar.style.width = barPct + '%';
 
     if (riskPct <= 1) {
       bar.style.background = '#34C759';
-      levelText.textContent = 'Conservative ✓';
+      levelText.textContent = 'Conservative';
       levelText.style.color = '#34C759';
     } else if (riskPct <= 2) {
       bar.style.background = '#FF9500';
@@ -252,10 +270,14 @@
     }
 
     const alertEl = document.getElementById('alert');
-    if (riskPct > 2) {
+    if (riskPct > 3) {
+      alertEl.className = 'alert-card visible danger';
+      document.getElementById('alert-icon').textContent = '🛑';
+      document.getElementById('alert-text').textContent = 'Risk above 3% is very high. One losing streak can wipe significant capital. Reduce your position size immediately.';
+    } else if (riskPct > 1) {
       alertEl.className = 'alert-card visible warning';
       document.getElementById('alert-icon').textContent = '⚠️';
-      document.getElementById('alert-text').textContent = 'Risk above 2% is considered high. Professional traders recommend keeping risk at 1-2% per trade.';
+      document.getElementById('alert-text').textContent = 'Risk above 1% increases pressure. Professional traders keep risk at 0.5–1% per trade for long-term consistency.';
     } else {
       alertEl.className = 'alert-card visible safe';
       document.getElementById('alert-icon').textContent = '✅';
