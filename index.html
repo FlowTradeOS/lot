@@ -98,6 +98,8 @@
   .alert-card.warning .alert-text { color: #A05C00; }
   .alert-card.danger { background: rgba(255,59,48,0.08); }
   .alert-card.danger .alert-text { color: #C0392B; }
+
+  .note { font-size: 11px; color: var(--muted); line-height: 1.5; padding: 0 4px; margin-top: 2px; }
 </style>
 </head>
 <body>
@@ -112,37 +114,37 @@
     <div class="fields">
       <div class="field full">
         <label>Select Pair</label>
-        <select id="instrument">
+        <select id="instrument" onchange="onInstrumentChange()">
           <option value="" disabled selected>Select instrument...</option>
           <optgroup label="Forex Majors">
-            <option value="EURUSD|10">EUR/USD</option>
-            <option value="GBPUSD|10">GBP/USD</option>
-            <option value="USDJPY|6.70">USD/JPY</option>
-            <option value="USDCHF|7.50">USD/CHF</option>
-            <option value="AUDUSD|10">AUD/USD</option>
-            <option value="NZDUSD|10">NZD/USD</option>
-            <option value="USDCAD|7.50">USD/CAD</option>
+            <option value="EURUSD|10|forex">EUR/USD</option>
+            <option value="GBPUSD|10|forex">GBP/USD</option>
+            <option value="USDJPY|6.70|forex">USD/JPY</option>
+            <option value="USDCHF|7.50|forex">USD/CHF</option>
+            <option value="AUDUSD|10|forex">AUD/USD</option>
+            <option value="NZDUSD|10|forex">NZD/USD</option>
+            <option value="USDCAD|7.50|forex">USD/CAD</option>
           </optgroup>
           <optgroup label="Forex Minors">
-            <option value="EURGBP|10">EUR/GBP</option>
-            <option value="EURJPY|6.70">EUR/JPY</option>
-            <option value="EURAUD|10">EUR/AUD</option>
-            <option value="EURCAD|7.50">EUR/CAD</option>
-            <option value="GBPJPY|6.70">GBP/JPY</option>
-            <option value="GBPAUD|10">GBP/AUD</option>
-            <option value="AUDJPY|6.70">AUD/JPY</option>
-            <option value="CADJPY|6.70">CAD/JPY</option>
+            <option value="EURGBP|10|forex">EUR/GBP</option>
+            <option value="EURJPY|6.70|forex">EUR/JPY</option>
+            <option value="EURAUD|10|forex">EUR/AUD</option>
+            <option value="EURCAD|7.50|forex">EUR/CAD</option>
+            <option value="GBPJPY|6.70|forex">GBP/JPY</option>
+            <option value="GBPAUD|10|forex">GBP/AUD</option>
+            <option value="AUDJPY|6.70|forex">AUD/JPY</option>
+            <option value="CADJPY|6.70|forex">CAD/JPY</option>
           </optgroup>
           <optgroup label="Metals & Commodities">
-            <option value="XAUUSD|10">XAU/USD (Gold)</option>
-            <option value="XAGUSD|5">XAG/USD (Silver)</option>
-            <option value="WTI|10">WTI Oil</option>
+            <option value="XAUUSD|10|metal">XAU/USD (Gold)</option>
+            <option value="XAGUSD|50|metal">XAG/USD (Silver)</option>
+            <option value="WTI|10|metal">WTI Oil</option>
           </optgroup>
           <optgroup label="Indices">
-            <option value="GER40|1">GER40</option>
-            <option value="US30|1">US30</option>
-            <option value="NAS100|1">NAS100</option>
-            <option value="US500|1">US500</option>
+            <option value="GER40|1|index">GER40</option>
+            <option value="US30|1|index">US30</option>
+            <option value="NAS100|1|index">NAS100</option>
+            <option value="US500|1|index">US500</option>
           </optgroup>
         </select>
       </div>
@@ -167,10 +169,10 @@
         </div>
       </div>
       <div class="field">
-        <label>Stop Loss</label>
+        <label id="sl-label">Stop Loss</label>
         <div class="input-wrap">
           <input type="number" id="stoploss" value="20" min="0.1" step="0.1">
-          <span class="input-suffix">pips</span>
+          <span class="input-suffix" id="sl-suffix">pips</span>
         </div>
       </div>
       <div class="field">
@@ -181,6 +183,7 @@
         </div>
       </div>
     </div>
+    <div class="note" id="sl-note">Select an instrument to see the correct Stop Loss unit.</div>
   </div>
 
   <button class="calc-btn" onclick="calculate()">Calculate</button>
@@ -227,19 +230,48 @@
 </div>
 
 <script>
+  // Per-instrument config:
+  // value = "SYMBOL|valuePerUnitPerStandardLot|assetClass"
+  //   forex : unit = pip,   value = $ per pip per 1.0 lot
+  //   metal : unit = pip,   value = $ per pip per 1.0 lot (gold pip = $0.10 move = $10/lot)
+  //   index : unit = point, value = $ per point per 1.0 lot (~1)
+  const UNIT_CONFIG = {
+    forex: { label: 'Stop Loss', suffix: 'pips',   note: 'Enter your Stop Loss distance in <b>pips</b>.' },
+    metal: { label: 'Stop Loss', suffix: 'pips',   note: 'Enter your Stop Loss distance in <b>pips</b>.' },
+    index: { label: 'Stop Loss', suffix: 'points', note: 'Enter your Stop Loss distance in <b>points</b>. Point value is approximate \u2014 confirm with your broker\u2019s contract size.' }
+  };
+
+  function getClass() {
+    const v = document.getElementById('instrument').value;
+    if (!v) return null;
+    return v.split('|')[2];
+  }
+
+  function onInstrumentChange() {
+    const cls = getClass();
+    const cfg = UNIT_CONFIG[cls];
+    if (!cfg) return;
+    document.getElementById('sl-label').textContent = cfg.label;
+    document.getElementById('sl-suffix').textContent = cfg.suffix;
+    document.getElementById('sl-note').innerHTML = cfg.note;
+  }
+
   function calculate() {
     const instrVal = document.getElementById('instrument').value;
     const balance = parseFloat(document.getElementById('balance').value) || 0;
     const riskPct = parseFloat(document.getElementById('risk').value) || 0;
-    const slPips = parseFloat(document.getElementById('stoploss').value) || 0;
+    const slDist = parseFloat(document.getElementById('stoploss').value) || 0;
     const rrRatio = parseFloat(document.getElementById('rr-ratio').value) || 1;
 
     if (!instrVal) { alert('Please select an instrument!'); return; }
-    if (!balance || !riskPct || !slPips) { alert('Please fill in all fields!'); return; }
+    if (!balance || !riskPct || !slDist) { alert('Please fill in all fields!'); return; }
 
-    const pipValue = parseFloat(instrVal.split('|')[1]);
+    const parts = instrVal.split('|');
+    const unitValue = parseFloat(parts[1]); // $ per unit per standard lot
     const riskUSD = balance * riskPct / 100;
-    const lotSize = riskUSD / (slPips * pipValue);
+
+    // Universal formula: lot = riskUSD / (stopDistance * valuePerUnitPerLot)
+    const lotSize = riskUSD / (slDist * unitValue);
     const miniLots = lotSize * 10;
     const potentialProfit = riskUSD * rrRatio;
 
